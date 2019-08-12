@@ -13,6 +13,7 @@ import {
   Highlight,
   MarkSeries,
   PolygonSeries,
+  Borders,
 } from 'react-vis'
 import moment from 'moment'
 import _ from 'lodash'
@@ -40,8 +41,8 @@ export const Chart = ({ step = null, onBrushEnd, xDomain } = {}) => {
     case 'start':
       curve = 'curveStepAfter'
       stepGetter = time => ({
-        x0: new Date(time * 1000),
-        x: new Date((time + 360 - gap) * 1000),
+        x0: new Date((time + gap / 2) * 1000),
+        x: new Date((time + 360 - gap / 2) * 1000),
       })
       break
 
@@ -134,10 +135,12 @@ export const Chart = ({ step = null, onBrushEnd, xDomain } = {}) => {
         )
     }
   }
+  const Wrapper = ({ children }) => <g>{children}</g>
   return (
     <>
       {/* JSON.stringify({ xDomain, _xDomain }) */}
       <XYPlot
+        //animation
         xDomain={_xDomain}
         xType="time"
         width={500}
@@ -149,8 +152,6 @@ export const Chart = ({ step = null, onBrushEnd, xDomain } = {}) => {
       >
         <HorizontalGridLines />
         <VerticalGridLines />
-        <XAxis />
-        <YAxis />
         {/* <ChartLabel
         text="Speed"
         className="alt-y-label"
@@ -184,9 +185,11 @@ export const Chart = ({ step = null, onBrushEnd, xDomain } = {}) => {
           }))}
         />
         <Line
-          strokeWidth={1}
+          strokeWidth={1.2}
           onNearestX={({ x }, { index }) => {
-            setHoveredItem({ x, index })
+            setHoveredItem(
+              x <= _xDomain[1] && x >= _xDomain[0] ? { x, index } : null,
+            )
           }}
           className="first-series"
           data={_data.map(({ time, value }) => ({
@@ -194,6 +197,10 @@ export const Chart = ({ step = null, onBrushEnd, xDomain } = {}) => {
             y: value,
           }))}
           curve={curve}
+          // style={{
+          //   position: 'absolute',
+          //   clip: 'rect(300px, 500px, 190px, 10px)',
+          // }}
         />
         {/*hoveredItem && (
           <MarkSeries
@@ -204,6 +211,16 @@ export const Chart = ({ step = null, onBrushEnd, xDomain } = {}) => {
           />
           )*/}
         {renderStep()}
+        <Borders
+          style={{
+            bottom: { fill: '#fff' },
+            left: { fill: '#fff' },
+            right: { fill: '#fff' },
+            top: { fill: '#fff' },
+          }}
+        />
+        <XAxis />
+        <YAxis />
         <Highlight
           onBrushEnd={brush => onBrushEnd && onBrushEnd(brush)}
           enableY={false}
@@ -294,14 +311,17 @@ export const ReactVis01 = () => {
       <div style={{ display: 'flex' }}>
         <div>
           <h4>Senza gradini</h4>
+          <br />
           <Chart xDomain={timeRange} onBrushEnd={onBrushEnd} />
         </div>
         <div>
           <h4>Gradini con datapoint all'inizio</h4>
+          <b>QUESTO PROBABILMENTE È QUELLO CHE HA MENO SENSO</b>
           <Chart xDomain={timeRange} onBrushEnd={onBrushEnd} step="start" />
         </div>
         <div>
           <h4>Gradini con datapoint al centro</h4>
+          <br />
           <Chart xDomain={timeRange} onBrushEnd={onBrushEnd} step="middle" />
         </div>
       </div>
