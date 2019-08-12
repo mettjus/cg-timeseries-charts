@@ -136,9 +136,7 @@ export const Chart = ({ step = null, onBrushEnd, xDomain } = {}) => {
   }
   return (
     <>
-      {JSON.stringify({ xDomain, _xDomain })}
-      {/*hoveredIndex && <MarkSeries data={[_data[hoveredIndex]]} />*/}
-      {hoveredItem && JSON.stringify(_data[hoveredItem.index])}
+      {/* JSON.stringify({ xDomain, _xDomain }) */}
       <XYPlot
         xDomain={_xDomain}
         xType="time"
@@ -212,7 +210,13 @@ export const Chart = ({ step = null, onBrushEnd, xDomain } = {}) => {
         />
         {crosshairValues[0] && (
           <Crosshair values={crosshairValues}>
-            <div className="rv-crosshair__inner__content">
+            <div
+              className="rv-crosshair__inner__content"
+              style={{
+                backgroundColor: 'rgba(0,0,0,.6)',
+                margin: 8,
+              }}
+            >
               <table>
                 <tbody>
                   <tr>
