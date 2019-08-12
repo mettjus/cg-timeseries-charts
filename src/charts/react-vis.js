@@ -213,10 +213,10 @@ export const Chart = ({ step = null, onBrushEnd, xDomain } = {}) => {
         {renderStep()}
         <Borders
           style={{
-            bottom: { fill: '#fff' },
+            bottom: { fill: 'none' },
             left: { fill: '#fff' },
             right: { fill: '#fff' },
-            top: { fill: '#fff' },
+            top: { fill: 'none' },
           }}
         />
         <XAxis />
