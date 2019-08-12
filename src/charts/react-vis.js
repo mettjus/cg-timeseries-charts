@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import {
   XYPlot,
   XAxis,
@@ -11,17 +11,20 @@ import {
   Crosshair,
   VerticalRectSeries,
   Highlight,
+  MarkSeries,
+  PolygonSeries,
 } from 'react-vis'
 import moment from 'moment'
 import _ from 'lodash'
 import { DatePicker, TimePicker } from 'antd'
+import color from 'color'
 
 import 'react-vis/dist/style.css'
 
 import { data } from '../data'
 
-// const Line = LineSeries
-const Line = LineSeriesCanvas
+const Line = LineSeries
+// const Line = LineSeriesCanvas
 
 export const Chart = ({ step = null, onBrushEnd, xDomain } = {}) => {
   const gap = 60
@@ -50,8 +53,13 @@ export const Chart = ({ step = null, onBrushEnd, xDomain } = {}) => {
       })
       break
   }
-  const [crosshairValues, setCrosshairValues] = useState([])
+  const [hoveredItem, setHoveredItem] = useState(null)
   const _data = data.speed
+  const crosshairValues = useMemo(
+    () =>
+      hoveredItem ? [{ x: hoveredItem.x, ..._data[hoveredItem.index] }] : [],
+    [_data, hoveredItem],
+  )
   const _times = _data.map(d => d.time)
   const _xDomain = [
     xDomain[0] || new Date(_.min(_times) * 1000),
@@ -59,15 +67,84 @@ export const Chart = ({ step = null, onBrushEnd, xDomain } = {}) => {
   ]
   const _values = _data.map(d => d.value)
   const domain = [_.min(_values), _.max(_values)]
+
+  const renderStep = () => {
+    if (!hoveredItem) return null
+    const { time, value } = _data[hoveredItem.index]
+    const color = 'rgb(121, 199, 227)'
+    switch (step) {
+      case 'start':
+        return (
+          <PolygonSeries
+            style={{
+              stroke: color,
+              strokeWidth: 4,
+              //strokeLinecap: 'round',
+              //strokeLinecap: 'square',
+              //'stroke-linecap': 'square',
+              //strokeLinecap: 'butt',
+            }}
+            data={[
+              {
+                x: new Date(time * 1000),
+                y: value,
+              },
+              {
+                x: new Date((time + 360) * 1000),
+                y: value,
+              },
+            ]}
+          />
+        )
+      case 'middle':
+        return (
+          <PolygonSeries
+            style={{
+              stroke: color,
+              strokeWidth: 4,
+              //strokeLinecap: 'round',
+              //strokeLinecap: 'square',
+              //'stroke-linecap': 'square',
+              //strokeLinecap: 'butt',
+            }}
+            data={[
+              {
+                x: new Date((time - 180) * 1000),
+                y: value,
+              },
+              {
+                x: new Date((time + 180) * 1000),
+                y: value,
+              },
+            ]}
+          />
+        )
+      default:
+        return (
+          <MarkSeries
+            color={color}
+            size={3}
+            data={[
+              {
+                x: new Date(time * 1000),
+                y: value,
+              },
+            ]}
+          />
+        )
+    }
+  }
   return (
     <>
       {JSON.stringify({ xDomain, _xDomain })}
+      {/*hoveredIndex && <MarkSeries data={[_data[hoveredIndex]]} />*/}
+      {hoveredItem && JSON.stringify(_data[hoveredItem.index])}
       <XYPlot
         xDomain={_xDomain}
         xType="time"
         width={500}
         height={300}
-        onMouseLeave={() => setCrosshairValues([])}
+        onMouseLeave={() => setHoveredItem(null)}
         //yDomain={domain}
         yDomain={domain}
         range={domain}
@@ -92,17 +169,27 @@ export const Chart = ({ step = null, onBrushEnd, xDomain } = {}) => {
           color={'rgba(255,0,0,.1)'}
           //color={d => `rgba(255,0,0,.2)`}
           stroke={null}
+          // style={{
+          //   stroke: null,
+          //   fill: d => 'red',
+          // }}
           data={_data.map(({ time, data_loss }) => ({
             ...stepGetter(time),
             y0: domain[0],
             y: domain[0] + data_loss * (domain[1] - domain[0]),
+            //fill: color('green').rgbNumber(),
+            //color: 0.3,
+            // stroke: d => {
+            //   console.log('helo')
+            //   return 'fucsia'
+            // },
           }))}
         />
         <Line
           strokeWidth={1}
-          onNearestX={({ x }, { index }) =>
-            setCrosshairValues([{ x, ..._data[index] }])
-          }
+          onNearestX={({ x }, { index }) => {
+            setHoveredItem({ x, index })
+          }}
           className="first-series"
           data={_data.map(({ time, value }) => ({
             x: new Date(time * 1000),
@@ -110,6 +197,15 @@ export const Chart = ({ step = null, onBrushEnd, xDomain } = {}) => {
           }))}
           curve={curve}
         />
+        {/*hoveredItem && (
+          <MarkSeries
+            data={[_data[hoveredItem.index]].map(({ time, value }) => ({
+              x: new Date(time * 1000),
+              y: value,
+            }))}
+          />
+          )*/}
+        {renderStep()}
         <Highlight
           onBrushEnd={brush => onBrushEnd && onBrushEnd(brush)}
           enableY={false}
