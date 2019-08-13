@@ -17,9 +17,9 @@ import moment from 'moment'
 // }
 
 function generateData({ min = 17, max = 45 } = {}) {
-  return _.range(0, 50).map(i => ({
-    time: moment('2019-05-01T00:00:00Z')
-      .add(i * 6, 'm')
+  return _.range(0, 200).map(i => ({
+    time: moment()
+      .subtract(i * 6, 'm')
       .unix(),
     value: _.random(min, max, true),
     data_loss: _.random(0, 1, true),

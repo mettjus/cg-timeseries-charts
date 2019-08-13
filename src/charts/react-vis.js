@@ -27,7 +27,14 @@ import { data } from '../data'
 const Line = LineSeries
 // const Line = LineSeriesCanvas
 
-export const Chart = ({ step = null, onBrushEnd, xDomain } = {}) => {
+const LINE_COLOR = 'rgb(18, 147, 154)'
+
+export const Chart = ({
+  step = null,
+  onBrushEnd,
+  xDomain,
+  showDataLoss = false,
+} = {}) => {
   const gap = 60
   let curve, stepGetter
   switch (step) {
@@ -72,7 +79,7 @@ export const Chart = ({ step = null, onBrushEnd, xDomain } = {}) => {
   const renderStep = () => {
     if (!hoveredItem) return null
     const { time, value } = _data[hoveredItem.index]
-    const color = 'rgb(121, 199, 227)'
+    const color = LINE_COLOR
     switch (step) {
       case 'start':
         return (
@@ -87,11 +94,11 @@ export const Chart = ({ step = null, onBrushEnd, xDomain } = {}) => {
             }}
             data={[
               {
-                x: new Date(time * 1000),
+                x: new Date((time - 360) * 1000),
                 y: value,
               },
               {
-                x: new Date((time + 360) * 1000),
+                x: new Date(time * 1000),
                 y: value,
               },
             ]}
@@ -135,7 +142,6 @@ export const Chart = ({ step = null, onBrushEnd, xDomain } = {}) => {
         )
     }
   }
-  const Wrapper = ({ children }) => <g>{children}</g>
   return (
     <>
       {/* JSON.stringify({ xDomain, _xDomain }) */}
@@ -163,35 +169,37 @@ export const Chart = ({ step = null, onBrushEnd, xDomain } = {}) => {
         //   textAnchor: 'end',
         // }}
       /> */}
-        <VerticalRectSeries
-          //yDomain={[0, 1]}
-          color={'rgba(255,0,0,.1)'}
-          //color={d => `rgba(255,0,0,.2)`}
-          stroke={null}
-          // style={{
-          //   stroke: null,
-          //   fill: d => 'red',
-          // }}
-          data={_data.map(({ time, data_loss }) => ({
-            ...stepGetter(time),
-            y0: domain[0],
-            y: domain[0] + data_loss * (domain[1] - domain[0]),
-            //fill: color('green').rgbNumber(),
-            //color: 0.3,
-            // stroke: d => {
-            //   console.log('helo')
-            //   return 'fucsia'
-            // },
-          }))}
-        />
+        {showDataLoss && (
+          <VerticalRectSeries
+            //yDomain={[0, 1]}
+            color={'rgba(255,0,0,.1)'}
+            //color={d => `rgba(255,0,0,.2)`}
+            stroke={null}
+            // style={{
+            //   stroke: null,
+            //   fill: d => 'red',
+            // }}
+            data={_data.map(({ time, data_loss }) => ({
+              ...stepGetter(time),
+              y0: domain[0],
+              y: domain[0] + data_loss * (domain[1] - domain[0]),
+              //fill: color('green').rgbNumber(),
+              //color: 0.3,
+              // stroke: d => {
+              //   console.log('helo')
+              //   return 'fucsia'
+              // },
+            }))}
+          />
+        )}
         <Line
           strokeWidth={1.2}
+          color={LINE_COLOR}
           onNearestX={({ x }, { index }) => {
             setHoveredItem(
               x <= _xDomain[1] && x >= _xDomain[0] ? { x, index } : null,
             )
           }}
-          className="first-series"
           data={_data.map(({ time, value }) => ({
             x: new Date(time * 1000),
             y: value,
@@ -248,10 +256,12 @@ export const Chart = ({ step = null, onBrushEnd, xDomain } = {}) => {
                     <th>Speed</th>
                     <td>{crosshairValues[0].value}</td>
                   </tr>
-                  <tr>
-                    <th>Loss</th>
-                    <td>{Math.round(crosshairValues[0].data_loss * 100)}%</td>
-                  </tr>
+                  {showDataLoss && (
+                    <tr>
+                      <th>Loss</th>
+                      <td>{Math.round(crosshairValues[0].data_loss * 100)}%</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -262,13 +272,12 @@ export const Chart = ({ step = null, onBrushEnd, xDomain } = {}) => {
   )
 }
 
-export const ReactVis01 = () => {
+export const ReactVis01 = ({
+  initialInterval = [moment().subtract(24, 'h'), moment()],
+} = {}) => {
   const timeFormat = 'HH:mm'
-  const [tmpTimeRange, setTmpTimeRange] = useState([
-    moment('2019-05-01T00:00:00.000Z'),
-    null,
-  ])
-  const [timeRange, setTimeRange] = useState([null, null])
+  const [tmpTimeRange, setTmpTimeRange] = useState(initialInterval)
+  const [timeRange, setTimeRange] = useState(initialInterval)
   const onBrushEnd = brush => {
     console.log(brush)
     setTmpTimeRange([moment(brush.left), moment(brush.right)])
@@ -317,12 +326,22 @@ export const ReactVis01 = () => {
         <div>
           <h4>Gradini con datapoint all'inizio</h4>
           <b>QUESTO PROBABILMENTE È QUELLO CHE HA MENO SENSO</b>
-          <Chart xDomain={timeRange} onBrushEnd={onBrushEnd} step="start" />
+          <Chart
+            xDomain={timeRange}
+            onBrushEnd={onBrushEnd}
+            step="start"
+            showDataLoss
+          />
         </div>
         <div>
           <h4>Gradini con datapoint al centro</h4>
           <br />
-          <Chart xDomain={timeRange} onBrushEnd={onBrushEnd} step="middle" />
+          <Chart
+            xDomain={timeRange}
+            onBrushEnd={onBrushEnd}
+            step="middle"
+            showDataLoss
+          />
         </div>
       </div>
     </>
