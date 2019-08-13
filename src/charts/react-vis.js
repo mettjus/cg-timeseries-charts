@@ -226,7 +226,7 @@ export const Chart = ({ step = null, onBrushEnd, xDomain } = {}) => {
           enableY={false}
         />
         {crosshairValues[0] && (
-          <Crosshair values={crosshairValues}>
+          <Crosshair values={crosshairValues} className="timeseries-crosshair">
             <div
               className="rv-crosshair__inner__content"
               style={{
