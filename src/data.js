@@ -16,32 +16,50 @@ import moment from 'moment'
 //   ],
 // }
 
-function generateData({min = 17, max = 45, resolutionMinutes = 6, withDataLoss = false} = {}) {
-	const now = Math.round(moment().unix() / (resolutionMinutes * 6)) * resolutionMinutes * 6
-	return _.range(0, 200).map(i => ({
-		time: moment
-			.unix(now)
-			.subtract(i * resolutionMinutes, 'm')
-			.unix(),
-		value: _.random(min, max, true),
-		data_loss: withDataLoss ? _.random(0, 1, true) : undefined,
-	}))
+function generateData({
+  min = 17,
+  max = 45,
+  resolutionMinutes = 6,
+  withDataLoss = false,
+} = {}) {
+  const now =
+    Math.round(moment().unix() / (resolutionMinutes * 6)) *
+    resolutionMinutes *
+    6
+  return _.range(0, (60 * 24) / resolutionMinutes).map(i => ({
+    time: moment
+      .unix(now)
+      .subtract(i * resolutionMinutes, 'm')
+      .unix(),
+    value: _.random(min, max, true),
+    data_loss: withDataLoss ? _.random(0, 1, true) : undefined,
+  }))
 }
 
 const elaboratedData = {
-	speed: generateData({min: 17, max: 30, resolutionMinutes: 1, withDataLoss: true}),
-	temperature: generateData({min: 19, max: 47, resolutionMinutes: 1, withDataLoss: true}),
+  speed: generateData({
+    min: 17,
+    max: 30,
+    resolutionMinutes: 1,
+    withDataLoss: true,
+  }),
+  temperature: generateData({
+    min: 19,
+    max: 47,
+    resolutionMinutes: 1,
+    withDataLoss: true,
+  }),
 }
 const rawData = {
-	speed: elaboratedData.speed
-		.filter(d => d.time % 6 === 0 && d.data_loss < 0.5)
-		.map(({data_loss, ...d}) => d),
-	temperature: elaboratedData.temperature
-		.filter(d => d.time % 6 === 0 && d.data_loss < 0.5)
-		.map(({data_loss, ...d}) => d),
+  speed: elaboratedData.speed
+    .filter(d => d.time % 6 === 0 && d.data_loss < 0.5)
+    .map(({ data_loss, ...d }) => d),
+  temperature: elaboratedData.temperature
+    .filter(d => d.time % 6 === 0 && d.data_loss < 0.5)
+    .map(({ data_loss, ...d }) => d),
 }
 
 export const data = {
-	raw: rawData,
-	elaborated: elaboratedData,
+  raw: rawData,
+  elaborated: elaboratedData,
 }
