@@ -16,19 +16,32 @@ import moment from 'moment'
 //   ],
 // }
 
-function generateData({ min = 17, max = 45 } = {}) {
-  return _.range(0, 200).map(i => ({
-    time: moment()
-      .subtract(i * 6, 'm')
-      .unix(),
-    value: _.random(min, max, true),
-    data_loss: _.random(0, 1, true),
-  }))
+function generateData({min = 17, max = 45, resolutionMinutes = 6, withDataLoss = false} = {}) {
+	const now = Math.round(moment().unix() / (resolutionMinutes * 6)) * resolutionMinutes * 6
+	return _.range(0, 200).map(i => ({
+		time: moment
+			.unix(now)
+			.subtract(i * resolutionMinutes, 'm')
+			.unix(),
+		value: _.random(min, max, true),
+		data_loss: withDataLoss ? _.random(0, 1, true) : undefined,
+	}))
+}
+
+const elaboratedData = {
+	speed: generateData({min: 17, max: 30, resolutionMinutes: 1, withDataLoss: true}),
+	temperature: generateData({min: 19, max: 47, resolutionMinutes: 1, withDataLoss: true}),
+}
+const rawData = {
+	speed: elaboratedData.speed
+		.filter(d => d.time % 6 === 0 && d.data_loss < 0.5)
+		.map(({data_loss, ...d}) => d),
+	temperature: elaboratedData.temperature
+		.filter(d => d.time % 6 === 0 && d.data_loss < 0.5)
+		.map(({data_loss, ...d}) => d),
 }
 
 export const data = {
-  speed: generateData({ min: 15, max: 30 }),
-  temperature: generateData({ min: 19, max: 47 }),
+	raw: rawData,
+	elaborated: elaboratedData,
 }
-
-//console.log(JSON.stringify(data, null, 2))
